@@ -11,12 +11,16 @@ test.describe('Login Module', () => {
         const loginPage = new LoginPage(page);
         const dashboardPage = new DashboardPage(page);
         
+<<<<<<< Updated upstream
         const user = getRuntimeUser();
         await loginPage.goto();
         await loginPage.login(
             user.email,
             user.password
         );
+=======
+        await loginPage.login(user.email,user.password);
+>>>>>>> Stashed changes
 
         await dashboardPage.openProjectManagement();
         await dashboardPage.verifyProjectPage();

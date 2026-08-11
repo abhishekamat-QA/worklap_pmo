@@ -19,7 +19,12 @@ export class LoginPage {
         await this.loginBtn.click();
     }
 
+<<<<<<< Updated upstream
     async openSignup() { 
         await this.signupLink.click(); 
     }
 }
+=======
+}
+
+>>>>>>> Stashed changes
