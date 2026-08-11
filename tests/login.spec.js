@@ -1,7 +1,8 @@
 import { test } from '@playwright/test';
 import { LoginPage } from '../pages/login.page';
 import { DashboardPage } from '../pages/dashboard.page';
-import { getFirstUser } from '../utils/jsonReader';
+import { getRuntimeUser } from '../utils/runtimeUserReader';
+//import { getFirstUser } from '../utils/jsonReader';
 
 test.describe('Login Module', () => {
 
@@ -9,22 +10,15 @@ test.describe('Login Module', () => {
 
         const loginPage = new LoginPage(page);
         const dashboardPage = new DashboardPage(page);
-
-        const user = getFirstUser();
-
-        await loginPage.goto();
-
-        await page.pause;
         
+        const user = getRuntimeUser();
+        await loginPage.goto();
         await loginPage.login(
             user.email,
             user.password
         );
 
         await dashboardPage.openProjectManagement();
-
         await dashboardPage.verifyProjectPage();
-
     });
-
 });
