@@ -6,6 +6,7 @@ export class LoginPage {
         this.email = page.getByPlaceholder('Email');
         this.password = page.getByPlaceholder('Password');
         this.loginBtn = page.getByRole('button', { name: 'Login' });
+        this.signupLink = page.getByRole('link', { name: 'Sign up here' });
     }
 
     async goto() {
@@ -20,5 +21,9 @@ export class LoginPage {
             this.loginBtn.click()
         ]);
     }
+     async openSignup() { 
+        await this.signupLink.click(); 
+    }
 
 }
+
