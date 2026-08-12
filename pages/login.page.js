@@ -18,13 +18,9 @@ export class LoginPage {
         await this.password.fill(password);
         await this.loginBtn.click();
     }
-
-<<<<<<< Updated upstream
-    async openSignup() { 
+     async openSignup() { 
         await this.signupLink.click(); 
     }
-}
-=======
+
 }
 
->>>>>>> Stashed changes
