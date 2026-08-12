@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ManageUsersPage } from '../pages/manageuser.page.js';
 import testData from '../test-data/manageUsersData.json' with { type: 'json' };
+import { generateInviteEmails } from '../utils/testDataGenerator.js';
 
 test.use({
     storageState: 'test-data/authState.json'
@@ -9,28 +10,27 @@ test.use({
 test('Manage Users - Invite Org Admin, PM Admin, PM Manager and PM User', async ({ page }) => {
 
     const manageUsersPage = new ManageUsersPage(page);
-
-    const timestamp = Date.now();
+    const emails = generateInviteEmails();
 
     const orgAdminInvite = {
         ...testData.orgAdminInvite,
-        email: `wlpmoautotest${timestamp}@getnada.com`
+        email: emails.orgAdminEmail
     };
 
     const pmAdminInvite = {
         ...testData.pmAdminInvite,
         email: orgAdminInvite.email,
-        retryEmail: `wlpmoautotest${timestamp + 1}@getnada.com`
+        retryEmail: emails.pmAdminRetryEmail
     };
 
     const pmManagerInvite = {
         ...testData.pmManagerInvite,
-        email: `pmmanager${timestamp + 2}@getnada.com`
+        email: emails.pmManagerEmail
     };
 
     const pmUserInvite = {
         ...testData.pmUserInvite,
-        email: `pmuser${timestamp + 3}@getnada.com`
+        email: emails.pmUserEmail
     };
 
     await page.goto('https://wlqa.testingmonkey.com');
