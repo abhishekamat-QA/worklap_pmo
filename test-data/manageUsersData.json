@@ -1,0 +1,21 @@
+{
+  "orgAdminInvite": {
+    "testCaseId": "SU_TC_340",
+    "role": "Org Admin"
+  },
+  "pmAdminInvite": {
+    "testCaseId": "SU_TC_220",
+    "role": "PM Admin",
+    "projectManagementAccess": "Admin"
+  },
+  "pmManagerInvite": {
+    "testCaseId": "SU_TC_221",
+    "role": "PM Manager",
+    "projectManagementAccess": "Manager"
+  },
+  "pmUserInvite": {
+    "testCaseId": "SU_TC_222",
+    "role": "PM User",
+    "projectManagementAccess": "User"
+  }
+}
