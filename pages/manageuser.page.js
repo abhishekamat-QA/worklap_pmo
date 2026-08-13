@@ -1,4 +1,3 @@
-
 import { expect } from '@playwright/test';
 
 export class ManageUsersPage {
@@ -14,200 +13,417 @@ export class ManageUsersPage {
             name: /Invite Users/i
         });
 
-
-        this.addNewUserHeading = page.getByRole('heading', {
+        this.addUserDialog = page.getByRole('dialog', {
             name: 'Add New User'
         });
 
-        this.workEmailInput = page.getByLabel('Work Email');
-
-        this.addUserButton = page.getByRole('button', {
-            name: /^Add User$/i
-        });
-
-        this.resetButton = page.getByRole('button', {
-            name: /^Reset$/i
-        });
-
-        this.orgAdminToggle = page
-            .locator('div:has-text("Invite as Org Admin") > button:not([aria-hidden="true"])')
-            .first();
-
-
-        this.hrmsAccessDropdown = page
-            .getByText('HRMS Access', { exact: true })
-            .locator('..')
-            .locator('button');
-
-        this.projectManagementAccessDropdown = page
-            .getByText('Project Management Access', { exact: true })
-            .locator('..')
-            .locator('button');
-
-        this.crmAccessDropdown = page
-            .getByText('CRM Access', { exact: true })
-            .locator('..')
-            .locator('button');
-
-
-        this.assignedProjectsDropdown = page.getByPlaceholder(
-            'Search and assign projects'
+        this.addNewUserHeading = this.addUserDialog.getByRole(
+            'heading',
+            {
+                name: 'Add New User'
+            }
         );
 
-
-        this.moduleAccessError = page.getByText(
-            'Please select at least one module access level.',
-            { exact: true }
+        this.workEmailInput = this.addUserDialog.getByRole(
+            'textbox',
+            {
+                name: 'Work Email'
+            }
         );
 
-
-        this.successMessage = page.getByText(
-            /successfully|invitation sent|invited/i
+        this.addUserButton = this.addUserDialog.getByRole(
+            'button',
+            {
+                name: /^Add User$/i
+            }
         );
 
-        this.emailAlreadyExistsMessage = page.getByText(
-            /Email already exists|already exists/i
+        this.resetButton = this.addUserDialog.getByRole(
+            'button',
+            {
+                name: /^Reset$/i
+            }
         );
+
+        this.orgAdminLabel = this.addUserDialog.getByText(
+            'Invite as Org Admin',
+            {
+                exact: true
+            }
+        );
+
+        this.orgAdminToggle = this.orgAdminLabel.locator(
+            'xpath=following::button[1]'
+        );
+
+        this.hrmsAccessDropdown =
+            this.getAccessDropdown('HRMS Access');
+
+        this.projectManagementAccessDropdown =
+            this.getAccessDropdown(
+                'Project Management Access'
+            );
+
+        this.crmAccessDropdown =
+            this.getAccessDropdown('CRM Access');
+
+        this.projectSearchInput =
+            this.addUserDialog.getByPlaceholder(
+                'Search and assign projects'
+            );
+
+
+        this.emailExistsMessage =
+            this.page.getByText(
+                'Email already exists',
+                {
+                    exact: true
+                }
+            );
+
+        this.moduleAccessError =
+            this.addUserDialog.getByText(
+                'Please select at least one module access level.',
+                {
+                    exact: true
+                }
+            );
+
+        this.successMessage =
+            this.page.getByText(
+                /user invited successfully|invited successfully|invitation sent/i
+            );
     }
 
+    getAccessDropdown(accessName) {
+
+        return this.addUserDialog
+            .getByText(
+                accessName,
+                {
+                    exact: true
+                }
+            )
+            .locator('..')
+            .getByRole('button')
+            .first();
+    }
 
     async navigateToManageUsers() {
 
-        const profileMenuTrigger = this.page
-            .locator('button, [role="button"], [data-testid]')
-            .filter({ hasText: /Ananya K|PM Admin|Org Owner/i })
-            .first();
+        const profileButton =
+            this.page.getByRole(
+                'button',
+                {
+                    name: /Org Owner|PM Admin|Org Admin/i
+                }
+            ).first();
 
-        await profileMenuTrigger.click();
+        await expect(
+            profileButton
+        ).toBeVisible({
+            timeout: 15000
+        });
 
-        const manageUsersMenuItem = this.page.getByText(
-            'Manage Users',
-            { exact: true }
-        );
+        await profileButton.click();
 
-        await manageUsersMenuItem.click();
+        const manageUsersMenu =
+            this.page.getByText(
+                'Manage Users',
+                {
+                    exact: true
+                }
+            );
 
-        await this.manageUsersHeading.waitFor({
-            state: 'visible'
+        await expect(
+            manageUsersMenu
+        ).toBeVisible({
+            timeout: 10000
+        });
+
+        await manageUsersMenu.click();
+
+        await expect(
+            this.manageUsersHeading
+        ).toBeVisible({
+            timeout: 15000
         });
     }
 
+    async openInviteUser() {
 
-    async openInviteUsers() {
+        await expect(
+            this.inviteUsersButton
+        ).toBeVisible({
+            timeout: 10000
+        });
 
         await this.inviteUsersButton.click();
 
-        await this.addNewUserHeading.waitFor({
-            state: 'visible'
+        await expect(
+            this.addNewUserHeading
+        ).toBeVisible({
+            timeout: 10000
         });
     }
 
+    async enterEmail(email) {
 
-    async enterWorkEmail(email) {
+        if (!email) {
+            throw new Error(
+                'Invite email was not generated.'
+            );
+        }
 
         await this.workEmailInput.fill(email);
+
+        await expect(
+            this.workEmailInput
+        ).toHaveValue(email);
     }
 
-    async enableOrgAdminToggle() {
+    async enableOrgAdmin() {
+
+        await expect(
+            this.orgAdminLabel
+        ).toBeVisible({
+            timeout: 10000
+        });
+
+        await expect(
+            this.orgAdminToggle
+        ).toBeVisible({
+            timeout: 10000
+        });
 
         await this.orgAdminToggle.click();
 
-        await expect(this.page.getByText(
-            'Invite as Org Admin',
-            { exact: true }
-        )).toBeVisible();
+        await expect(
+            this.addUserButton
+        ).toBeEnabled({
+            timeout: 10000
+        });
     }
 
+    async selectAccess(
+        dropdown,
+        accessLevel
+    ) {
 
-    async selectAccessLevel(dropdown, accessLevel) {
+        if (!accessLevel) {
+            throw new Error(
+                'Access level was not provided.'
+            );
+        }
 
         await dropdown.click();
 
-        await this.page.getByRole('button', {
-            name: new RegExp(`^${accessLevel}\\b`, 'i')
-        }).click();
+        const option =
+            this.page.getByText(
+                accessLevel,
+                {
+                    exact: true
+                }
+            ).last();
+
+        await expect(
+            option
+        ).toBeVisible({
+            timeout: 5000
+        });
+
+        await option.click();
     }
 
 
-    async selectHRMSAccess(accessLevel) {
+    async selectProjectManagementAccess(
+        accessLevel
+    ) {
 
-        await this.selectAccessLevel(
-            this.hrmsAccessDropdown,
-            accessLevel
-        );
-    }
-
-
-    async selectProjectManagementAccess(accessLevel) {
-
-        await this.selectAccessLevel(
+        await this.selectAccess(
             this.projectManagementAccessDropdown,
             accessLevel
         );
     }
 
 
-    async selectCRMAccess(accessLevel) {
+    async selectHRMSAccess(
+        accessLevel
+    ) {
 
-        await this.selectAccessLevel(
-            this.crmAccessDropdown,
+        await this.selectAccess(
+            this.hrmsAccessDropdown,
             accessLevel
         );
     }
 
 
-    async assignProject(projectName) {
+    async selectCRMAccess(
+        accessLevel
+    ) {
 
-        await this.assignedProjectsDropdown.click();
-
-        await this.page.getByText(
-            projectName,
-            { exact: true }
-        ).click();
+        await this.selectAccess(
+            this.crmAccessDropdown,
+            accessLevel
+        );
     }
 
+    async assignProject(projectName) {
 
-    async clickAddUser() {
+        if (!projectName) {
+            throw new Error(
+                'Project name was not provided.'
+            );
+        }
+
+        await this.projectSearchInput.click();
+
+        const project =
+            this.addUserDialog.getByText(
+                projectName,
+                {
+                    exact: true
+                }
+            );
+
+        await expect(
+            project
+        ).toBeVisible({
+            timeout: 5000
+        });
+
+        await project.click();
+    }
+
+    async submitUser() {
+
+        await expect(
+            this.addUserButton
+        ).toBeEnabled({
+            timeout: 10000
+        });
 
         await this.addUserButton.click();
     }
 
+    async verifyInvitationSuccess() {
 
-    async resetForm() {
+        await expect(
+            this.successMessage
+        ).toBeVisible({
+            timeout: 10000
+        });
+    }
+
+    async verifyEmailAlreadyExists() {
+
+        await expect(
+            this.emailExistsMessage
+        ).toBeVisible({
+            timeout: 10000
+        });
+    }
+
+    async resetUserForm() {
 
         await this.resetButton.click();
+
+        await expect(
+            this.workEmailInput
+        ).toHaveValue('');
     }
-
-
-    async expectEmailAlreadyExistsError() {
-
-        await expect(this.emailAlreadyExistsMessage).toBeVisible();
-    }
-
 
     async inviteUser({
         email,
-        projectManagementAccess,
-        project
+        orgAdmin = false,
+        projectManagementAccess = null,
+        hrmsAccess = null,
+        crmAccess = null,
+        project = null
     }) {
 
-        await this.openInviteUsers();
+        await this.openInviteUser();
 
-        await this.enterWorkEmail(email);
+        await this.enterEmail(email);
 
-        if (projectManagementAccess) {
-            await this.selectProjectManagementAccess(
-                projectManagementAccess
-            );
+        if (orgAdmin) {
+
+            await this.enableOrgAdmin();
+
+        } else {
+
+            if (hrmsAccess) {
+
+                await this.selectHRMSAccess(
+                    hrmsAccess
+                );
+            }
+
+            if (projectManagementAccess) {
+
+                await this.selectProjectManagementAccess(
+                    projectManagementAccess
+                );
+            }
+
+            if (crmAccess) {
+
+                await this.selectCRMAccess(
+                    crmAccess
+                );
+            }
+
+            if (project) {
+
+                await this.assignProject(
+                    project
+                );
+            }
+
+            await expect(
+                this.addUserButton
+            ).toBeEnabled({
+                timeout: 10000
+            });
         }
 
+        await this.submitUser();
 
-        if (project) {
-            await this.assignProject(
-                project
-            );
-        }
+        await this.verifyInvitationSuccess();
+    }
 
-        await this.clickAddUser();
+    async inviteDuplicateEmailAndRetry({
+        existingEmail,
+        retryEmail,
+        projectManagementAccess
+    }) {
+
+        await this.openInviteUser();
+
+        await this.enterEmail(
+            existingEmail
+        );
+
+        await this.selectProjectManagementAccess(
+            projectManagementAccess
+        );
+
+        await this.submitUser();
+
+        await this.verifyEmailAlreadyExists();
+
+        await this.resetUserForm();
+
+        await this.enterEmail(
+            retryEmail
+        );
+
+        await this.selectProjectManagementAccess(
+            projectManagementAccess
+        );
+
+        await this.submitUser();
+
+        await this.verifyInvitationSuccess();
     }
 }

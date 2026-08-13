@@ -1,191 +1,114 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
+import { LoginPage } from '../pages/login.page.js';
 import { ManageUsersPage } from '../pages/manageuser.page.js';
-import testData from '../test-data/manageUsersData.json' with { type: 'json' };
+import runtimeUser from '../test-data/runtimeUser.json' with { type: 'json' };
 import { generateInviteEmails } from '../utils/testDataGenerator.js';
 
-test.use({
-    storageState: 'test-data/authState.json'
-});
+test.describe(
+    'Manage Users Module',
+    () => {
 
-test('Manage Users - Invite Org Admin, PM Admin, PM Manager and PM User', async ({ page }) => {
+        test(
+            'Manage Users - Invite users with different access levels',
+            async ({ page }) => {
 
-    const manageUsersPage = new ManageUsersPage(page);
-    const emails = generateInviteEmails();
+                const loginPage =
+                    new LoginPage(page);
 
-    const orgAdminInvite = {
-        ...testData.orgAdminInvite,
-        email: emails.orgAdminEmail
-    };
+                const manageUsersPage =
+                    new ManageUsersPage(page);
 
-    const pmAdminInvite = {
-        ...testData.pmAdminInvite,
-        email: orgAdminInvite.email,
-        retryEmail: emails.pmAdminRetryEmail
-    };
+                const emails =
+                    generateInviteEmails();
 
-    const pmManagerInvite = {
-        ...testData.pmManagerInvite,
-        email: emails.pmManagerEmail
-    };
+                await test.step(
+                    'Login using runtime user',
+                    async () => {
 
-    const pmUserInvite = {
-        ...testData.pmUserInvite,
-        email: emails.pmUserEmail
-    };
+                        await loginPage.goto();
 
-    await page.goto('https://wlqa.testingmonkey.com');
+                        await loginPage.login(
+                            runtimeUser.email,
+                            runtimeUser.password
+                        );
+                    }
+                );
 
-    await manageUsersPage.navigateToManageUsers();
+                await test.step(
+                    'Navigate to Manage Users',
+                    async () => {
 
-    await test.step('SU_TC_340 - Invite Org Admin user', async () => {
+                        await manageUsersPage
+                            .navigateToManageUsers();
+                    }
+                );
 
-        test.info().annotations.push({
-            type: 'testCaseId',
-            description: 'SU_TC_340'
-        });
 
-        await manageUsersPage.openInviteUsers();
+                await test.step(
+                    'SU_TC_340 - Invite Org Admin',
+                    async () => {
 
-        await expect(
-            manageUsersPage.addNewUserHeading
-        ).toBeVisible();
+                        await manageUsersPage.inviteUser({
+                            email:
+                                emails.orgAdminEmail,
 
-        await manageUsersPage.enterWorkEmail(
-            orgAdminInvite.email
+                            orgAdmin:
+                                true
+                        });
+                    }
+                );
+
+                await test.step(
+                    'SU_TC_220 - Invite PM Admin with duplicate email validation',
+                    async () => {
+
+                        await manageUsersPage
+                            .inviteDuplicateEmailAndRetry({
+
+                             
+                                existingEmail:
+                                    emails.orgAdminEmail,
+
+                                
+                                retryEmail:
+                                    emails.pmAdminRetryEmail,
+
+                                projectManagementAccess:
+                                    'Admin'
+                            });
+                    }
+                );
+
+                await test.step(
+                    'SU_TC_221 - Invite PM Manager',
+                    async () => {
+
+                        await manageUsersPage.inviteUser({
+
+                            email:
+                                emails.pmManagerEmail,
+
+                            projectManagementAccess:
+                                'Manager'
+                        });
+                    }
+                );
+
+                await test.step(
+                    'SU_TC_222 - Invite PM User',
+                    async () => {
+
+                        await manageUsersPage.inviteUser({
+
+                            email:
+                                emails.pmUserEmail,
+
+                            projectManagementAccess:
+                                'User'
+                        });
+                    }
+                );
+            }
         );
-
-        await manageUsersPage.enableOrgAdminToggle();
-
-        await expect(
-            manageUsersPage.addUserButton
-        ).toBeEnabled();
-
-        await manageUsersPage.clickAddUser();
-
-        await expect(
-            manageUsersPage.successMessage
-        ).toContainText(
-            /user invited successfully|invited successfully|invitation sent/i
-        );
-    });
-
-    await test.step('SU_TC_220 - Invite PM Admin user', async () => {
-
-        test.info().annotations.push({
-            type: 'testCaseId',
-            description: 'SU_TC_220'
-        });
-
-        await manageUsersPage.openInviteUsers();
-
-        await expect(
-            manageUsersPage.addNewUserHeading
-        ).toBeVisible();
-
-        await manageUsersPage.enterWorkEmail(
-            pmAdminInvite.email
-        );
-
-        await manageUsersPage.selectProjectManagementAccess(
-            pmAdminInvite.projectManagementAccess
-        );
-
-        await expect(
-            manageUsersPage.addUserButton
-        ).toBeEnabled();
-
-        await manageUsersPage.clickAddUser();
-
-        await manageUsersPage.expectEmailAlreadyExistsError();
-
-        await manageUsersPage.resetForm();
-
-        await manageUsersPage.enterWorkEmail(
-            pmAdminInvite.retryEmail
-        );
-
-        await manageUsersPage.selectProjectManagementAccess(
-            pmAdminInvite.projectManagementAccess
-        );
-
-        await expect(
-            manageUsersPage.addUserButton
-        ).toBeEnabled();
-
-        await manageUsersPage.clickAddUser();
-
-        await expect(
-            manageUsersPage.successMessage
-        ).toContainText(
-            /user invited successfully|invited successfully|invitation sent/i
-        );
-    });
-
-    await test.step('SU_TC_221 - Invite PM Manager user without project', async () => {
-
-        test.info().annotations.push({
-            type: 'testCaseId',
-            description: 'SU_TC_221'
-        });
-
-        await manageUsersPage.openInviteUsers();
-
-        await expect(
-            manageUsersPage.addNewUserHeading
-        ).toBeVisible();
-
-        await manageUsersPage.enterWorkEmail(
-            pmManagerInvite.email
-        );
-
-        await manageUsersPage.selectProjectManagementAccess(
-            pmManagerInvite.projectManagementAccess
-        );
-
-        await expect(
-            manageUsersPage.addUserButton
-        ).toBeEnabled();
-
-        await manageUsersPage.clickAddUser();
-
-        await expect(
-            manageUsersPage.successMessage
-        ).toContainText(
-            /user invited successfully|invited successfully|invitation sent/i
-        );
-    });
-
-    await test.step('SU_TC_222 - Invite PM User without project', async () => {
-
-        test.info().annotations.push({
-            type: 'testCaseId',
-            description: 'SU_TC_222'
-        });
-
-        await manageUsersPage.openInviteUsers();
-
-        await expect(
-            manageUsersPage.addNewUserHeading
-        ).toBeVisible();
-
-        await manageUsersPage.enterWorkEmail(
-            pmUserInvite.email
-        );
-
-        await manageUsersPage.selectProjectManagementAccess(
-            pmUserInvite.projectManagementAccess
-        );
-
-        await expect(
-            manageUsersPage.addUserButton
-        ).toBeEnabled();
-
-        await manageUsersPage.clickAddUser();
-
-        await expect(
-            manageUsersPage.successMessage
-        ).toContainText(
-            /user invited successfully|invited successfully|invitation sent/i
-        );
-    });
-});
+    }
+);
