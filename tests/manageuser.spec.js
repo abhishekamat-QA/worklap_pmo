@@ -4,56 +4,36 @@ import { ManageUsersPage } from '../pages/manageuser.page.js';
 import runtimeUser from '../test-data/runtimeUser.json' with { type: 'json' };
 import { generateInviteEmails } from '../utils/testDataGenerator.js';
 
-test.describe(
-    'Manage Users Module',
-    () => {
-
+test.describe('Manage Users Module',() => {
         test(
             'Manage Users - Invite users with different access levels',
             async ({ page }) => {
 
-                const loginPage =
-                    new LoginPage(page);
-
-                const manageUsersPage =
-                    new ManageUsersPage(page);
-
-                const emails =
-                    generateInviteEmails();
+                const loginPage =new LoginPage(page);
+                const manageUsersPage =new ManageUsersPage(page);
+                const emails =generateInviteEmails();
 
                 await test.step(
                     'Login using runtime user',
                     async () => {
 
                         await loginPage.goto();
-
-                        await loginPage.login(
-                            runtimeUser.email,
-                            runtimeUser.password
-                        );
+                        await loginPage.login(runtimeUser.email,runtimeUser.password);
                     }
                 );
 
-                await test.step(
-                    'Navigate to Manage Users',
-                    async () => {
+                await test.step('Navigate to Manage Users',async () => {
 
-                        await manageUsersPage
-                            .navigateToManageUsers();
+                        await manageUsersPage.navigateToManageUsers();
                     }
                 );
 
 
-                await test.step(
-                    'SU_TC_340 - Invite Org Admin',
-                    async () => {
+                await test.step('SU_TC_340 - Invite Org Admin',async () => {
 
                         await manageUsersPage.inviteUser({
-                            email:
-                                emails.orgAdminEmail,
-
-                            orgAdmin:
-                                true
+                            email:emails.orgAdminEmail,
+                            orgAdmin:true
                         });
                     }
                 );

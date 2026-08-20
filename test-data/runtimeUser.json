@@ -1,7 +1,9 @@
 {
-  "firstName": "Demo1786601400778",
-  "lastName": "User1786601400778",
-  "email": "wlpmoautotest1786601400778@getnada.com",
+  "firstName": "Demo",
+  "lastName": "User",
+  "email": "wlpmoautotest1787221272951@getnada.com",
   "password": "Qwerty@123",
-  "companyName": "Sample Company Pvt Ltd"
+  "companyName": "Sample Company Pvt Ltd",
+  "status": "SUCCESS",
+  "timestamp": "2026-08-20T10:21:20.403Z"
 }
