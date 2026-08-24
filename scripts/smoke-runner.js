@@ -3,16 +3,25 @@ const { execSync } = require('child_process');
 const specs = [
   {
     name: 'Signup',
-    file: 'tests/SU_TC_335.spec.js'
+    file: 'tests/SMOKE_TC_001.spec.js'
   },
   {
     name: 'Login',
-    file: 'tests/SU_TC_338_login.spec.js'
+    file: 'tests/SMOKE_TC_002.spec.js'
   },
   {
     name: 'User Management',
-    file: 'tests/manageuser.spec.js'
+    file: 'tests/SMOKE_TC_004.spec.js'
+  },
+  {
+    name: 'Invite Users',
+    file: 'tests/SMOKE_TC_005.spec.js'
+  },
+  {
+    name: 'Logout',
+    file: 'tests/SMOKE_TC_003.spec.js'
   }
+
 ];
 
 console.log('\n==============================================');
