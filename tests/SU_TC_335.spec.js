@@ -14,7 +14,7 @@ test.describe('Signup Flow', () => {
   for (const baseUser of signupUsers) {
 
     test(`Signup and Organisation Setup - ${baseUser.email}`,async ({ page }) => {
-
+// STEP 1 - Generate unique user data for signup
         const loginPage = new LoginPage(page);
         const signupPage = new SignupPage(page);
 
