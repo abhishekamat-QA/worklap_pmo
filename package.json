@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "smoke": "node scripts/smoke-runner.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

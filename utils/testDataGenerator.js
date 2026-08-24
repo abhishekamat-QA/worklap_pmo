@@ -1,16 +1,33 @@
-export function generateFallbackUser() {
+export function generateUniqueSignupUser(baseUser) {
 
     const timestamp = Date.now();
 
     return {
-        firstName: `Demo${timestamp}`,
-        lastName: `User${timestamp}`,
-        email: `wlpmoautotest${timestamp}@getnada.com`,
-        password: 'Qwerty@123',
-        companyName: 'Sample Company Pvt Ltd'
+        ...baseUser,
+
+        email:
+            `wlpmoautotest${timestamp}@getnada.com`,
+
+        password:
+            baseUser.password || 'Qwerty@123'
     };
 }
 
+
+export function generateFallbackUser(baseUser) {
+
+    const timestamp = Date.now();
+
+    return {
+        ...baseUser,
+
+        email:
+            `wlpmoautotest${timestamp}_fallback@getnada.com`,
+
+        password:
+            baseUser.password || 'Qwerty@123'
+    };
+}
 
 export function generateInviteEmails() {
 

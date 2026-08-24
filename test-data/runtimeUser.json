@@ -3,5 +3,7 @@
   "lastName": "User1787553001751",
   "email": "wlpmoautotest1787553001751@getnada.com",
   "password": "Qwerty@123",
-  "companyName": "Sample Company Pvt Ltd"
+  "companyName": "Sample Company Pvt Ltd",
+  "status": "SUCCESS",
+  "timestamp": "2026-08-24T06:41:43.837Z"
 }
