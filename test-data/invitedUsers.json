@@ -1,0 +1,37 @@
+[
+    {
+        "role": "Org Admin",
+        "email": "wlpmoautotest1787553068758@getnada.com",
+        "accountCreated": true,
+        "userKey": "fkRgLNGLlq7PK681oUYR8M5StvGMDH",
+        "signupUrl": "https://wlqa.testingmonkey.com/invited-signup?user-key=fkRgLNGLlq7PK681oUYR8M5StvGMDH",
+        "firstName": "OrgAdmin1787553101409",
+        "lastName": "User",
+        "password": "Qwerty@123"
+    },
+    {
+        "role": "PM Admin",
+        "email": "wlpmoautotest1787553068759@getnada.com",
+        "accountCreated": false
+    },
+    {
+        "role": "PM Manager",
+        "email": "pmmanager1787553068760@getnada.com",
+        "accountCreated": true,
+        "userKey": "If9iJkNIRFZxA4nVXfjvqENEBXBDzT",
+        "signupUrl": "https://wlqa.testingmonkey.com/invited-signup?user-key=If9iJkNIRFZxA4nVXfjvqENEBXBDzT",
+        "firstName": "PMManager1787553111845",
+        "lastName": "User",
+        "password": "Qwerty@123"
+    },
+    {
+        "role": "PM User",
+        "email": "pmuser1787553068761@getnada.com",
+        "accountCreated": true,
+        "userKey": "3AlLh4HDB3rRbnn4SQ90c8HARz4QsK",
+        "signupUrl": "https://wlqa.testingmonkey.com/invited-signup?user-key=3AlLh4HDB3rRbnn4SQ90c8HARz4QsK",
+        "firstName": "PMUser1787553121355",
+        "lastName": "User",
+        "password": "Qwerty@123"
+    }
+]

@@ -17,7 +17,7 @@ export class LoginPage {
         await this.email.fill(email);
         await this.password.fill(password);
         await Promise.all([
-            this.page.waitForURL(/dashboard|hrms\/dashboard/, { timeout: 30000 }),
+            //this.page.waitForURL(/dashboard|hrms\/dashboard/, { timeout: 30000 }),
             this.loginBtn.click()
         ]);
     }

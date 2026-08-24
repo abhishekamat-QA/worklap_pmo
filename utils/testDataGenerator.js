@@ -1,4 +1,5 @@
 export function generateFallbackUser() {
+
     const timestamp = Date.now();
 
     return {
@@ -10,11 +11,13 @@ export function generateFallbackUser() {
     };
 }
 
+
 export function generateInviteEmails() {
 
     const timestamp = Date.now();
 
     return {
+
         orgAdminEmail:
             `wlpmoautotest${timestamp}@getnada.com`,
 
@@ -26,5 +29,29 @@ export function generateInviteEmails() {
 
         pmUserEmail:
             `pmuser${timestamp + 3}@getnada.com`
+    };
+}
+
+
+export function generateInvitedUser() {
+
+    const timestamp = Date.now();
+
+    return {
+
+        firstName:
+            `Invited${timestamp}`,
+
+        lastName:
+            `User${timestamp}`,
+
+        email:
+            `wlpmoautotest${timestamp}@getnada.com`,
+
+        password:
+            'Qwerty@123',
+
+        companyName:
+            'Sample Company Pvt Ltd'
     };
 }
