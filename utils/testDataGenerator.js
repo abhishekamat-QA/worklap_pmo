@@ -1,28 +1,32 @@
 export function generateUniqueSignupUser(baseUser) {
 
-  const timestamp = Date.now();
+    const timestamp = Date.now();
 
-  return {
-    ...baseUser,
+    return {
+        ...baseUser,
 
-    email: `wlpmoautotest${timestamp}@getnada.com`,
+        email:
+            `wlpmoautotest${timestamp}@getnada.com`,
 
-    password: baseUser.password || 'Qwerty@123'
-  };
+        password:
+            baseUser.password || 'Qwerty@123'
+    };
 }
 
 
 export function generateFallbackUser(baseUser) {
 
-  const timestamp = Date.now();
+    const timestamp = Date.now();
 
-  return {
-    ...baseUser,
+    return {
+        ...baseUser,
 
-    email: `wlpmoautotest${timestamp}_fallback@getnada.com`,
+        email:
+            `wlpmoautotest${timestamp}_fallback@getnada.com`,
 
-    password: baseUser.password || 'Qwerty@123'
-  };
+        password:
+            baseUser.password || 'Qwerty@123'
+    };
 }
 
 export function generateInviteEmails() {
@@ -30,6 +34,7 @@ export function generateInviteEmails() {
     const timestamp = Date.now();
 
     return {
+
         orgAdminEmail:
             `wlpmoautotest${timestamp}@getnada.com`,
 
@@ -41,5 +46,29 @@ export function generateInviteEmails() {
 
         pmUserEmail:
             `pmuser${timestamp + 3}@getnada.com`
+    };
+}
+
+
+export function generateInvitedUser() {
+
+    const timestamp = Date.now();
+
+    return {
+
+        firstName:
+            `Invited${timestamp}`,
+
+        lastName:
+            `User${timestamp}`,
+
+        email:
+            `wlpmoautotest${timestamp}@getnada.com`,
+
+        password:
+            'Qwerty@123',
+
+        companyName:
+            'Sample Company Pvt Ltd'
     };
 }
