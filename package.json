@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "smoke": "node scripts/smoke-runner.js"
+    "smoke": "node scripts/smoke-runner.js",
+    "allure:clean": "rm -rf allure-results allure-report",
+    "allure:generate": "npx allure generate ./allure-results",
+    "allure:open": "npx allure open ./allure-report",
+    "allure:report": "npm run allure:generate && npm run allure:open && npm run allure:clean"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +16,7 @@
   "type": "commonjs",
   "devDependencies": {
     "@playwright/test": "^1.62.1",
-    "@types/node": "^26.1.2"
+    "@types/node": "^26.1.2",
+    "allure-playwright": "^3.10.2"
   }
 }
