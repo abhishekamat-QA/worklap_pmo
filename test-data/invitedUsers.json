@@ -1,31 +1,41 @@
 [
     {
         "role": "Org Admin",
-        "email": "wlpmoautotest1787557634566@getnada.com",
-        "accountCreated": false
+        "email": "wlpmoautotest1788176057962@getnada.com",
+        "accountCreated": true,
+        "userKey": "tGaqHGDPJGIAG3RcMoA3pBbuBPfWyp",
+        "signupUrl": "https://wlqa.testingmonkey.com/invited-signup?user-key=tGaqHGDPJGIAG3RcMoA3pBbuBPfWyp",
+        "firstName": "OrgAdmin1788176072550",
+        "lastName": "User",
+        "password": "Qwerty@123"
     },
     {
         "role": "PM Admin",
-        "email": "wlpmoautotest1787557634567@getnada.com",
+        "email": "wlpmoautotest1788176057963@getnada.com",
         "accountCreated": true,
-        "userKey": "677nhBAMD4huZXZy6cjrBEixcZOI9w",
-        "signupUrl": "https://wlqa.testingmonkey.com/invited-signup?user-key=677nhBAMD4huZXZy6cjrBEixcZOI9w",
-        "firstName": "PMAdmin1787557758443",
+        "userKey": "9WDxzGUoTHn3cAt3wrUW0bycrC7363",
+        "signupUrl": "https://wlqa.testingmonkey.com/invited-signup?user-key=9WDxzGUoTHn3cAt3wrUW0bycrC7363",
+        "firstName": "PMAdmin1788176079133",
         "lastName": "User",
         "password": "Qwerty@123"
     },
     {
         "role": "PM Manager",
-        "email": "pmmanager1787557634568@getnada.com",
-        "accountCreated": false
+        "email": "pmmanager1788176057964@getnada.com",
+        "accountCreated": true,
+        "userKey": "VcO4A50qlZRT2noJ2k5tcxxJxRQayx",
+        "signupUrl": "https://wlqa.testingmonkey.com/invited-signup?user-key=VcO4A50qlZRT2noJ2k5tcxxJxRQayx",
+        "firstName": "PMManager1788176085171",
+        "lastName": "User",
+        "password": "Qwerty@123"
     },
     {
         "role": "PM User",
-        "email": "pmuser1787557634569@getnada.com",
+        "email": "pmuser1788176057965@getnada.com",
         "accountCreated": true,
-        "userKey": "f8j7WTwDApf0yQ31UfxgHiiGgCNgYW",
-        "signupUrl": "https://wlqa.testingmonkey.com/invited-signup?user-key=f8j7WTwDApf0yQ31UfxgHiiGgCNgYW",
-        "firstName": "PMUser1787557767645",
+        "userKey": "q0kcDIoBZJ1oOxseoqeV7pFrC9eD78",
+        "signupUrl": "https://wlqa.testingmonkey.com/invited-signup?user-key=q0kcDIoBZJ1oOxseoqeV7pFrC9eD78",
+        "firstName": "PMUser1788176091117",
         "lastName": "User",
         "password": "Qwerty@123"
     }
