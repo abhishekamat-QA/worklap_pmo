@@ -6,7 +6,6 @@ export class ProjectPage {
         this.page = page;
         this.pmoButton = page.getByRole('button', { name: 'PMO' });
         this.projectsHeading = page.getByRole('heading', { name: 'Projects', exact: true });
-        this.selectButtons = page.getByRole('button', { name: /^Select$/ });
         this.newProjectLink = page.getByRole('link', { name: 'New Project' });
         this.projectNameInput = page.getByRole('textbox', { name: 'Enter project name' });
         this.createProjectButton = page.getByRole('button', { name: 'Create Project' });
@@ -14,13 +13,18 @@ export class ProjectPage {
         this.dateFields = page.locator('div').filter({ hasText: /^mm\/dd\/yyyy$/ });
         this.successMessage = page.getByText(/project created successfully|project has been created/i);
 
-        // Scoped to "Suggested Team Members" only - the Project Owner suggestions
-        // above it use the same "Select" button text but are single-select, so
-        // selecting a new owner just swaps which button reads "Selected" instead
-        // of reducing the page-wide Select button count (would infinite-loop).
+        // Suggested Project Owner and Suggested Team Members both render "Select"
+        // buttons, so each is scoped to its own section to avoid cross-matching.
+        // The section heading's parent is just a title wrapper div; the actual
+        // list of members lives in a sibling div, so scope from the grandparent.
+        this.projectOwnerSelectButtons = page
+            .getByText('Suggested Project Owner', { exact: true })
+            .locator('../..')
+            .getByRole('button', { name: /^Select$/ });
+
         this.teamMemberSelectButtons = page
             .getByText('Suggested Team Members', { exact: true })
-            .locator('..')
+            .locator('../..')
             .getByRole('button', { name: /^Select$/ });
     }
 
@@ -62,19 +66,18 @@ export class ProjectPage {
     }
 
     async selectProjectOwner(index = 0) {
-        const selectButtons = this.page.getByRole('button', { name: /^Select$/ });
-        const count = await selectButtons.count();
+        // Suggested owners load asynchronously after the form renders; wait for
+        // the first one instead of counting immediately (count() doesn't wait
+        // and reads 0 under CI load, before the suggestions API call resolves).
+        await expect(this.projectOwnerSelectButtons.first()).toBeVisible({ timeout: 15000 });
 
-        if (count === 0) {
-            throw new Error('No project owner Select buttons found.');
-        }
+        const count = await this.projectOwnerSelectButtons.count();
 
         if (index >= count) {
             throw new Error(`Project owner index ${index} does not exist. Available: ${count}`);
         }
 
-        await expect(selectButtons.nth(index)).toBeVisible({ timeout: 15000 });
-        await selectButtons.nth(index).click();
+        await this.projectOwnerSelectButtons.nth(index).click();
         console.log(`Project owner selected: index ${index}`);
     }
 
