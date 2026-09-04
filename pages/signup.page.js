@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test';
+
 export class SignupPage {
   constructor(page) {
     this.page = page;
@@ -43,12 +45,17 @@ export class SignupPage {
   }
 
   async setupOrganisation(companyName) {
-    await this.companyNameInput.click();
-    await this.companyNameInput.fill(companyName);
+    await this.page.getByText('Pre-filled from your location').waitFor({state: 'visible', timeout: 15000}).catch(() => {});
+
+    await expect(async () => {
+      await this.companyNameInput.click();
+      await this.companyNameInput.fill(companyName);
+      await expect(this.companyNameInput).toHaveValue(companyName, {timeout: 2000});
+      await this.continueBtn.click();
+      await expect(this.companyNameInput).not.toBeVisible({timeout: 3000});
+    }).toPass({timeout: 20000});
 
     console.log(`Company name entered: ${companyName}`);
-
-    await this.continueBtn.click();
   }
 
   async fillOTP() {

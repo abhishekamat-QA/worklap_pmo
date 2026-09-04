@@ -72,3 +72,11 @@ export function generateInvitedUser() {
             'Sample Company Pvt Ltd'
     };
 }
+export function generateProjectName() {
+
+    const timestamp = Date.now()
+        .toString()
+        .slice(-8);
+
+    return `Project_${timestamp}`;
+}

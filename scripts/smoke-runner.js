@@ -17,6 +17,14 @@ const specs = [
     name: 'Invite Users',
     file: 'tests/SMOKE_TC_005.spec.js'
   },
+    {
+    name: 'Project Creation - Org Owner',
+    file: 'tests/SMOKE_TC_006.spec.js'
+  },
+  {
+    name: 'Project Creation - Org Admin',
+    file: 'tests/SMOKE_TC_007.spec.js'
+  },
   {
     name: 'Logout',
     file: 'tests/SMOKE_TC_003.spec.js'
@@ -46,13 +54,13 @@ for (const spec of specs) {
     );
 
     console.log('\n----------------------------------------------');
-    console.log(`✅ ${spec.name} PASSED`);
+    console.log(` ${spec.name} PASSED`);
     console.log('----------------------------------------------\n');
 
   } catch (error) {
 
     console.error('\n----------------------------------------------');
-    console.error(`❌ ${spec.name} FAILED`);
+    console.error(` ${spec.name} FAILED`);
     console.error('----------------------------------------------\n');
 
     console.error(
@@ -64,11 +72,11 @@ for (const spec of specs) {
 }
 
 console.log('\n==============================================');
-console.log('       ✅ COMPLETE SMOKE TEST PASSED');
+console.log('        COMPLETE SMOKE TEST PASSED');
 console.log('==============================================');
 
 console.log(
-  'Signup → Login → User Management'
+  'Signup → Login → User Management → Logout'
 );
 
 console.log('==============================================\n');

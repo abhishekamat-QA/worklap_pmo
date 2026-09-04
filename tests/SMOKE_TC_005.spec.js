@@ -1,812 +1,285 @@
-import {
-    test,
-    expect
-} from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { LoginPage } from '../pages/login.page.js';
+import { InvitedSignupPage } from '../pages/invitedSignup.page.js';
+import { LogoutPage } from '../pages/logoutPage.js';
+import { InvitedUserApi } from '../api/invitedUser.api.js';
+import { readInvitedUsers, saveInvitedUsers } from '../utils/invitedUserWriter.js';
 
-import {
-    LoginPage
-} from '../pages/login.page.js';
+test.describe('Invited User Account Creation', () => {
 
-import {
-    InvitedSignupPage
-} from '../pages/invitedSignup.page.js';
+    test.setTimeout(240000);
 
-import {
-    LogoutPage
-} from '../pages/logoutPage.js';
+    test('Create account if required and login existing accounts', async ({ page, request }) => {
 
-import {
-    InvitedUserApi
-} from '../api/invitedUser.api.js';
+        const invitedUsers = readInvitedUsers();
 
-import {
-    readInvitedUsers,
-    saveInvitedUsers
-} from '../utils/invitedUserWriter.js';
+        expect(Array.isArray(invitedUsers), 'invitedUsers.json must contain an array.').toBe(true);
+        expect(invitedUsers.length, 'At least 4 invited users are required.').toBeGreaterThanOrEqual(4);
 
+        const loginPage = new LoginPage(page);
+        const invitedSignupPage = new InvitedSignupPage(page);
+        const logoutPage = new LogoutPage(page);
+        const invitedUserApi = new InvitedUserApi(request);
 
-test.describe(
-    'Invited User Account Creation',
-    () => {
+        for (let index = 0; index < 4; index++) {
 
-        test.setTimeout(240000);
+            const user = invitedUsers[index];
+            const role = String(user.role || '').trim().toLowerCase();
 
+            await test.step(`${user.role} - ${user.email}`, async () => {
 
-        test(
-            'Create account if required and login existing accounts',
-            async ({
-                page,
-                request
-            }) => {
+                expect(user.email, `Email missing for ${user.role}`).toBeTruthy();
 
-                const invitedUsers =
-                    readInvitedUsers();
+                console.log('\n========================================');
+                console.log(`Processing: ${user.email}`);
+                console.log(`Role: ${user.role}`);
+                console.log(`Account Created: ${user.accountCreated}`);
 
+                let shouldLogin = false;
 
-                expect(
-                    Array.isArray(invitedUsers),
-                    'invitedUsers.json must contain an array.'
-                ).toBe(true);
+                if (user.accountCreated === true) {
 
+                    console.log(`Account already exists. Login directly: ${user.email}`);
+                    shouldLogin = true;
 
-                expect(
-                    invitedUsers.length,
-                    'At least 4 invited users are required.'
-                ).toBeGreaterThanOrEqual(4);
+                } else {
 
+                    let userKey = user.userKey;
+                    let signupUrl = user.signupUrl;
 
-                const loginPage =
-                    new LoginPage(page);
+                    // STEP 1 - Fetch user-key via API when not already stored
+                    if (!userKey) {
 
-                const invitedSignupPage =
-                    new InvitedSignupPage(page);
+                        console.log(`Getting user-key for ${user.email}`);
+                        userKey = await invitedUserApi.getUserKey(user.email);
 
-                const logoutPage =
-                    new LogoutPage(page);
+                        if (!userKey) {
+                            console.log(`User-key unavailable for ${user.email}. Skipping.`);
+                            return;
+                        }
+                        user.userKey = userKey;
+                    }
 
-                const invitedUserApi =
-                    new InvitedUserApi(request);
+                    // STEP 2 - Build invited signup URL
+                    if (!signupUrl) {
+                        signupUrl = `https://wlqa.testingmonkey.com/invited-signup?user-key=${encodeURIComponent(userKey)}`;
+                        user.signupUrl = signupUrl;
+                    }
 
+                    expect(signupUrl, `Signup URL missing for ${user.email}`).toBeTruthy();
 
-                for (
-                    let index = 0;
-                    index < 4;
-                    index++
-                ) {
+                    console.log(`Opening signup URL: ${signupUrl}`);
+                    await page.goto(signupUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+                    console.log(`Current URL: ${page.url()}`);
 
-                    const user =
-                        invitedUsers[index];
+                    const accountCreatedHeading = invitedSignupPage.accountCreatedHeading;
+                    const signupForm = invitedSignupPage.firstNameInput;
 
+                    const pageContainsInvalidInvite = async () => {
+                        const bodyText = await page.locator('body').innerText().catch(() => '');
+                        return /invalid invite link/i.test(bodyText);
+                    };
 
-                    const role =
-                        String(user.role || '')
-                            .trim()
-                            .toLowerCase();
+                    const accountCreated = async () => {
 
+                        if (await accountCreatedHeading.isVisible().catch(() => false)) {
+                            return true;
+                        }
 
-                    await test.step(
-                        `${user.role} - ${user.email}`,
-                        async () => {
+                        if (await invitedSignupPage.successToast.isVisible().catch(() => false)) {
+                            return true;
+                        }
 
-                            expect(
-                                user.email,
-                                `Email missing for ${user.role}`
-                            ).toBeTruthy();
+                        const bodyText = await page.locator('body').innerText().catch(() => '');
+                        return /account created successfully/i.test(bodyText);
+                    };
 
+                    if (await pageContainsInvalidInvite()) {
+                        console.log(`Invalid invite for ${user.email}. Skipping to next credential.`);
+                        return;
+                    }
 
-                            console.log(
-                                '\n========================================'
-                            );
+                    // STEP 3 - Fill account creation form
+                    await expect(signupForm).toBeVisible({ timeout: 30000 });
 
-                            console.log(
-                                `Processing: ${user.email}`
-                            );
+                    const firstName = user.firstName || `${String(user.role).replace(/\s+/g, '')}${Date.now()}`;
+                    const lastName = user.lastName || 'User';
+                    const password = user.password || 'Qwerty@123';
 
-                            console.log(
-                                `Role: ${user.role}`
-                            );
+                    await invitedSignupPage.fillAccountDetails({ firstName, lastName, password });
 
-                            console.log(
-                                `Account Created: ${user.accountCreated}`
-                            );
+                    await expect(signupForm).toHaveValue(firstName);
+                    await expect(invitedSignupPage.lastNameInput).toHaveValue(lastName);
+                    await expect(invitedSignupPage.passwordInput).toHaveValue(password);
+                    await expect(invitedSignupPage.confirmPasswordInput).toHaveValue(password);
+                    await expect(invitedSignupPage.confirmButton).toBeEnabled({ timeout: 30000 });
 
+                    console.log(`Submitting account creation for ${user.email}`);
+                    await invitedSignupPage.clickConfirm();
 
-                            let shouldLogin = false;
+                    // STEP 4 - Resolve final signup state
+                    let result = 'pending';
 
+                    try {
 
-                            if (
-                                user.accountCreated === true
-                            ) {
+                        await expect.poll(async () => {
 
-                                console.log(
-                                    `Account already exists. Login directly: ${user.email}`
-                                );
+                            if (await accountCreated()) {
+                                return 'account-created';
+                            }
 
-                                shouldLogin = true;
+                            if (await pageContainsInvalidInvite()) {
+                                return 'invalid-invite';
+                            }
+
+                            return 'pending';
+
+                        }, { timeout: 10000, intervals: [300, 500, 1000] }).toBe('account-created');
+
+                        result = 'account-created';
+
+                    } catch {
+
+                        console.log(`No final signup state detected for ${user.email}. Rechecking invite.`);
+
+                        if (await accountCreated()) {
+
+                            result = 'account-created';
+
+                        } else {
+
+                            await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
+                            await page.waitForTimeout(1000);
+
+                            if (await pageContainsInvalidInvite()) {
+
+                                result = 'invalid-invite';
+
+                            } else if (await accountCreated()) {
+
+                                result = 'account-created';
 
                             } else {
 
-                                let userKey =
-                                    user.userKey;
+                                const formVisible = await signupForm.isVisible().catch(() => false);
 
-                                let signupUrl =
-                                    user.signupUrl;
+                                if (formVisible) {
 
+                                    console.log(`Signup page still available for ${user.email}.`);
 
-                                if (!userKey) {
+                                    await expect(signupForm).toBeVisible({ timeout: 10000 });
+                                    await invitedSignupPage.fillAccountDetails({ firstName, lastName, password });
+                                    await expect(invitedSignupPage.confirmButton).toBeEnabled({ timeout: 10000 });
+                                    await invitedSignupPage.clickConfirm();
 
-                                    console.log(
-                                        `Getting user-key for ${user.email}`
-                                    );
+                                    try {
 
+                                        await expect.poll(async () => {
 
-                                    userKey =
-                                        await invitedUserApi
-                                            .getUserKey(
-                                                user.email
-                                            );
+                                            if (await accountCreated()) {
+                                                return 'account-created';
+                                            }
 
+                                            if (await pageContainsInvalidInvite()) {
+                                                return 'invalid-invite';
+                                            }
 
-                                    if (!userKey) {
+                                            return 'pending';
 
-                                        console.log(
-                                            `User-key unavailable for ${user.email}. Skipping.`
-                                        );
+                                        }, { timeout: 15000, intervals: [300, 500, 1000] }).toBe('account-created');
 
-                                        return;
+                                        result = 'account-created';
+
+                                    } catch {
+
+                                        result = await pageContainsInvalidInvite() ? 'invalid-invite' : 'pending';
                                     }
 
+                                } else {
 
-                                    user.userKey =
-                                        userKey;
+                                    result = 'invalid-invite';
                                 }
-
-
-                                if (!signupUrl) {
-
-                                    signupUrl =
-                                        `https://wlqa.testingmonkey.com/invited-signup?user-key=${encodeURIComponent(
-                                            userKey
-                                        )}`;
-
-
-                                    user.signupUrl =
-                                        signupUrl;
-                                }
-
-
-                                expect(
-                                    signupUrl,
-                                    `Signup URL missing for ${user.email}`
-                                ).toBeTruthy();
-
-
-                                console.log(
-                                    `Opening signup URL: ${signupUrl}`
-                                );
-
-
-                                await page.goto(
-                                    signupUrl,
-                                    {
-                                        waitUntil:
-                                            'domcontentloaded',
-                                        timeout:
-                                            30000
-                                    }
-                                );
-
-
-                                console.log(
-                                    `Current URL: ${page.url()}`
-                                );
-
-
-                                const invalidInvite =
-                                    invitedSignupPage
-                                        .invalidInviteMessage;
-
-
-                                const accountCreatedHeading =
-                                    invitedSignupPage
-                                        .accountCreatedHeading;
-
-
-                                const signupForm =
-                                    invitedSignupPage
-                                        .firstNameInput;
-
-
-                                const pageContainsInvalidInvite =
-                                    async () => {
-
-                                        const bodyText =
-                                            await page
-                                                .locator('body')
-                                                .innerText()
-                                                .catch(
-                                                    () => ''
-                                                );
-
-
-                                        return /invalid invite link/i
-                                            .test(
-                                                bodyText
-                                            );
-                                    };
-
-
-                                const accountCreated =
-                                    async () => {
-
-                                        if (
-                                            await accountCreatedHeading
-                                                .isVisible()
-                                                .catch(
-                                                    () => false
-                                                )
-                                        ) {
-
-                                            return true;
-                                        }
-
-
-                                        if (
-                                            await invitedSignupPage
-                                                .successToast
-                                                .isVisible()
-                                                .catch(
-                                                    () => false
-                                                )
-                                        ) {
-
-                                            return true;
-                                        }
-
-
-                                        const bodyText =
-                                            await page
-                                                .locator('body')
-                                                .innerText()
-                                                .catch(
-                                                    () => ''
-                                                );
-
-
-                                        return /account created successfully/i
-                                            .test(
-                                                bodyText
-                                            );
-                                    };
-
-
-                                if (
-                                    await pageContainsInvalidInvite()
-                                ) {
-
-                                    console.log(
-                                        `Invalid invite for ${user.email}. Skipping to next credential.`
-                                    );
-
-                                    return;
-                                }
-
-
-                                await expect(
-                                    signupForm
-                                ).toBeVisible({
-                                    timeout:
-                                        30000
-                                });
-
-
-                                const firstName =
-                                    user.firstName ||
-                                    `${String(
-                                        user.role
-                                    ).replace(
-                                        /\s+/g,
-                                        ''
-                                    )}${Date.now()}`;
-
-
-                                const lastName =
-                                    user.lastName ||
-                                    'User';
-
-
-                                const password =
-                                    user.password ||
-                                    'Qwerty@123';
-
-
-                                await invitedSignupPage
-                                    .fillAccountDetails({
-                                        firstName,
-                                        lastName,
-                                        password
-                                    });
-
-
-                                await expect(
-                                    signupForm
-                                ).toHaveValue(
-                                    firstName
-                                );
-
-
-                                await expect(
-                                    invitedSignupPage
-                                        .lastNameInput
-                                ).toHaveValue(
-                                    lastName
-                                );
-
-
-                                await expect(
-                                    invitedSignupPage
-                                        .passwordInput
-                                ).toHaveValue(
-                                    password
-                                );
-
-
-                                await expect(
-                                    invitedSignupPage
-                                        .confirmPasswordInput
-                                ).toHaveValue(
-                                    password
-                                );
-
-
-                                await expect(
-                                    invitedSignupPage
-                                        .confirmButton
-                                ).toBeEnabled({
-                                    timeout:
-                                        30000
-                                });
-
-
-                                console.log(
-                                    `Submitting account creation for ${user.email}`
-                                );
-
-
-                                await invitedSignupPage
-                                    .clickConfirm();
-
-
-                                let result =
-                                    'pending';
-
-
-                                try {
-
-                                    await expect
-                                        .poll(
-                                            async () => {
-
-                                                if (
-                                                    await accountCreated()
-                                                ) {
-
-                                                    return 'account-created';
-                                                }
-
-
-                                                if (
-                                                    await pageContainsInvalidInvite()
-                                                ) {
-
-                                                    return 'invalid-invite';
-                                                }
-
-
-                                                return 'pending';
-                                            },
-                                            {
-                                                timeout:
-                                                    10000,
-
-                                                intervals: [
-                                                    300,
-                                                    500,
-                                                    1000
-                                                ]
-                                            }
-                                        )
-                                        .toBe(
-                                            'account-created'
-                                        );
-
-
-                                    result =
-                                        'account-created';
-
-                                } catch {
-
-                                    console.log(
-                                        `No final signup state detected for ${user.email}. Rechecking invite.`
-                                    );
-
-
-                                    if (
-                                        await accountCreated()
-                                    ) {
-
-                                        result =
-                                            'account-created';
-
-                                    } else {
-
-                                        await page.reload(
-                                            {
-                                                waitUntil:
-                                                    'domcontentloaded',
-                                                timeout:
-                                                    30000
-                                            }
-                                        );
-
-
-                                        await page.waitForTimeout(
-                                            1000
-                                        );
-
-
-                                        if (
-                                            await pageContainsInvalidInvite()
-                                        ) {
-
-                                            result =
-                                                'invalid-invite';
-
-                                        } else if (
-                                            await accountCreated()
-                                        ) {
-
-                                            result =
-                                                'account-created';
-
-                                        } else {
-
-                                            const formVisible =
-                                                await signupForm
-                                                    .isVisible()
-                                                    .catch(
-                                                        () => false
-                                                    );
-
-
-                                            if (
-                                                formVisible
-                                            ) {
-
-                                                console.log(
-                                                    `Signup page still available for ${user.email}.`
-                                                );
-
-
-                                                await expect(
-                                                    signupForm
-                                                ).toBeVisible({
-                                                    timeout:
-                                                        10000
-                                                });
-
-
-                                                await invitedSignupPage
-                                                    .fillAccountDetails({
-                                                        firstName,
-                                                        lastName,
-                                                        password
-                                                    });
-
-
-                                                await expect(
-                                                    invitedSignupPage
-                                                        .confirmButton
-                                                ).toBeEnabled({
-                                                    timeout:
-                                                        10000
-                                                });
-
-
-                                                await invitedSignupPage
-                                                    .clickConfirm();
-
-
-                                                try {
-
-                                                    await expect
-                                                        .poll(
-                                                            async () => {
-
-                                                                if (
-                                                                    await accountCreated()
-                                                                ) {
-
-                                                                    return 'account-created';
-                                                                }
-
-
-                                                                if (
-                                                                    await pageContainsInvalidInvite()
-                                                                ) {
-
-                                                                    return 'invalid-invite';
-                                                                }
-
-
-                                                                return 'pending';
-                                                            },
-                                                            {
-                                                                timeout:
-                                                                    15000,
-
-                                                                intervals: [
-                                                                    300,
-                                                                    500,
-                                                                    1000
-                                                                ]
-                                                            }
-                                                        )
-                                                        .toBe(
-                                                            'account-created'
-                                                        );
-
-
-                                                    result =
-                                                        'account-created';
-
-                                                } catch {
-
-                                                    if (
-                                                        await pageContainsInvalidInvite()
-                                                    ) {
-
-                                                        result =
-                                                            'invalid-invite';
-
-                                                    } else {
-
-                                                        result =
-                                                            'pending';
-                                                    }
-                                                }
-
-                                            } else {
-
-                                                result =
-                                                    'invalid-invite';
-                                            }
-                                        }
-                                    }
-                                }
-
-
-                                if (
-                                    result ===
-                                    'invalid-invite'
-                                ) {
-
-                                    console.log(
-                                        `Invite is invalid/consumed for ${user.email}. Moving to next credential.`
-                                    );
-
-                                    return;
-                                }
-
-
-                                if (
-                                    result !==
-                                    'account-created'
-                                ) {
-
-                                    console.log(
-                                        `Account creation could not be confirmed for ${user.email}. Skipping this credential.`
-                                    );
-
-                                    return;
-                                }
-
-
-                                user.firstName =
-                                    firstName;
-
-                                user.lastName =
-                                    lastName;
-
-                                user.password =
-                                    password;
-
-                                user.accountCreated =
-                                    true;
-
-
-                                saveInvitedUsers(
-                                    invitedUsers
-                                );
-
-
-                                console.log(
-                                    `Account created successfully: ${user.email}`
-                                );
-
-
-                                shouldLogin = true;
                             }
-
-
-                            if (
-                                !shouldLogin
-                            ) {
-
-                                return;
-                            }
-
-
-                            expect(
-                                user.password,
-                                `Password missing for ${user.email}`
-                            ).toBeTruthy();
-
-
-                            await test.step(
-                                'Login',
-                                async () => {
-
-                                    console.log(
-                                        `Logging in: ${user.email}`
-                                    );
-
-
-                                    await loginPage.goto();
-
-
-                                    await expect(
-                                        page.getByPlaceholder(
-                                            'Email'
-                                        )
-                                    ).toBeVisible({
-                                        timeout:
-                                            30000
-                                    });
-
-
-                                    await loginPage.login(
-                                        user.email,
-                                        user.password
-                                    );
-                                }
-                            );
-
-
-                            await test.step(
-                                'Validate landing page',
-                                async () => {
-
-                                    if (
-                                        role ===
-                                        'org admin'
-                                    ) {
-
-                                        await page.waitForURL(
-                                            /\/hrms\/dashboard/,
-                                            {
-                                                timeout:
-                                                    30000
-                                            }
-                                        );
-
-
-                                        await expect(
-                                            page.getByRole(
-                                                'heading',
-                                                {
-                                                    name:
-                                                        /Welcome back|Good day/i
-                                                }
-                                            )
-                                        ).toBeVisible({
-                                            timeout:
-                                                30000
-                                        });
-
-
-                                        console.log(
-                                            `HRMS dashboard validated for ${user.email}`
-                                        );
-
-                                    } else if (
-                                        role ===
-                                            'pm admin' ||
-                                        role ===
-                                            'pm manager' ||
-                                        role ===
-                                            'pm user'
-                                    ) {
-
-                                        await page.waitForURL(
-                                            /\/pmo\/projects/,
-                                            {
-                                                timeout:
-                                                    30000
-                                            }
-                                        );
-
-
-                                        await expect(
-                                            page.getByRole(
-                                                'heading',
-                                                {
-                                                    name:
-                                                        'Projects',
-                                                    exact:
-                                                        true
-                                                }
-                                            )
-                                        ).toBeVisible({
-                                            timeout:
-                                                30000
-                                        });
-
-
-                                        console.log(
-                                            `PMO Projects validated for ${user.email}`
-                                        );
-
-                                    } else {
-
-                                        throw new Error(
-                                            `Unsupported role: ${user.role}`
-                                        );
-                                    }
-                                }
-                            );
-
-
-                            await test.step(
-                                'Logout',
-                                async () => {
-
-                                    await logoutPage.logout();
-
-
-                                    await page.waitForURL(
-                                        /\/login/,
-                                        {
-                                            timeout:
-                                                30000
-                                        }
-                                    );
-
-
-                                    await expect(
-                                        page.getByPlaceholder(
-                                            'Email'
-                                        )
-                                    ).toBeVisible({
-                                        timeout:
-                                            30000
-                                    });
-
-
-                                    console.log(
-                                        `Logged out successfully: ${user.email}`
-                                    );
-                                }
-                            );
-
-
-                            console.log(
-                                `Completed: ${user.email}`
-                            );
                         }
-                    );
+                    }
+
+                    if (result === 'invalid-invite') {
+                        console.log(`Invite is invalid/consumed for ${user.email}. Moving to next credential.`);
+                        return;
+                    }
+
+                    if (result !== 'account-created') {
+                        console.log(`Account creation could not be confirmed for ${user.email}. Skipping this credential.`);
+                        return;
+                    }
+
+                    // STEP 5 - Persist created account details
+                    user.firstName = firstName;
+                    user.lastName = lastName;
+                    user.password = password;
+                    user.accountCreated = true;
+
+                    saveInvitedUsers(invitedUsers);
+
+                    console.log(`Account created successfully: ${user.email}`);
+                    shouldLogin = true;
                 }
-            }
-        );
-    }
-);
+
+                if (!shouldLogin) {
+                    return;
+                }
+
+                expect(user.password, `Password missing for ${user.email}`).toBeTruthy();
+
+                await test.step('Login', async () => {
+
+                    console.log(`Logging in: ${user.email}`);
+
+                    await loginPage.goto();
+                    await expect(page.getByPlaceholder('Email')).toBeVisible({ timeout: 30000 });
+                    await loginPage.login(user.email, user.password);
+                });
+
+                await test.step('Validate landing page', async () => {
+
+                    if (role === 'org admin') {
+
+                        await page.waitForURL(/\/hrms\/dashboard/, { timeout: 30000 });
+
+                        await expect(
+                            page.getByRole('heading', { name: /Welcome back|Good day/i })
+                        ).toBeVisible({ timeout: 30000 });
+
+                        console.log(`HRMS dashboard validated for ${user.email}`);
+
+                    } else if (role === 'pm admin' || role === 'pm manager' || role === 'pm user') {
+
+                        await page.waitForURL(/\/pmo\/projects/, { timeout: 30000 });
+
+                        await expect(
+                            page.getByRole('heading', { name: 'Projects', exact: true })
+                        ).toBeVisible({ timeout: 30000 });
+
+                        console.log(`PMO Projects validated for ${user.email}`);
+
+                    } else {
+
+                        throw new Error(`Unsupported role: ${user.role}`);
+                    }
+                });
+
+                await test.step('Logout', async () => {
+
+                    await logoutPage.logout();
+
+                    await page.waitForURL(/\/login/, { timeout: 30000 });
+                    await expect(page.getByPlaceholder('Email')).toBeVisible({ timeout: 30000 });
+
+                    console.log(`Logged out successfully: ${user.email}`);
+                });
+
+                console.log(`Completed: ${user.email}`);
+            });
+        }
+    });
+});

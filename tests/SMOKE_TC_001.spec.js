@@ -89,8 +89,7 @@ test.describe('Signup Flow', () => {
 
         await signupPage.setupOrganisation(successfulUser.companyName);
         console.log(`Company name entered successfully: ${successfulUser.companyName}`);
-
-        await expect(page).toHaveURL('https://wlqa.testingmonkey.com/verify-otp');
+        await expect(page).toHaveURL('https://wlqa.testingmonkey.com/verify-otp', {timeout: 15000});
         await signupPage.fillOTP();
 
         await expect(signupPage.verifyBtn).toBeEnabled({timeout: 10000});
