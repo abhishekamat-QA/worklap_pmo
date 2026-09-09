@@ -122,7 +122,37 @@ export class ProjectPage {
         return `${month}/${day}/${year}`;
     }
 
+    // The date picker only renders the visible month's grid (plus a few
+    // leading/trailing filler days to complete the grid rows), so a target
+    // date outside that range must be reached by paging the calendar first.
+    async navigateCalendarToMonth(date) {
+        const targetMonthYear = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date);
+        const monthLabel = this.page.locator('.react-calendar__navigation__label__labelText');
+        const nextButton = this.page.locator('.react-calendar__navigation__next-button');
+        const prevButton = this.page.locator('.react-calendar__navigation__prev-button');
+
+        await expect(monthLabel).toBeVisible({ timeout: 10000 });
+
+        for (let i = 0; i < 24; i++) {
+            const currentMonthYear = (await monthLabel.textContent()).trim();
+
+            if (currentMonthYear === targetMonthYear) {
+                return;
+            }
+
+            const [currentMonthName, currentYear] = currentMonthYear.split(' ');
+            const currentIndex = Number(currentYear) * 12 + new Date(`${currentMonthName} 1, 2000`).getMonth();
+            const targetIndex = date.getFullYear() * 12 + date.getMonth();
+
+            await (targetIndex > currentIndex ? nextButton : prevButton).click();
+        }
+
+        throw new Error(`Could not navigate calendar to ${targetMonthYear}`);
+    }
+
     async selectCalendarDate(date) {
+        await this.navigateCalendarToMonth(date);
+
         const dayLabel = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(date);
         const calendarButton = this.page.getByRole('button', { name: new RegExp(`^${dayLabel}(,|$)`) });
 

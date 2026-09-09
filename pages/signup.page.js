@@ -16,6 +16,13 @@ export class SignupPage {
     // Organisation Setup
     this.companyNameInput = page.getByRole('textbox', {name: 'Company Name'});
 
+    // Country is a react-select combobox; the placeholder shows "Select Country"
+    // when geo-detection hasn't filled it in (happens independently of Timezone,
+    // which is usually auto-filled even when Country is not).
+    this.countryPlaceholder = page.locator('#react-select-country-select-placeholder');
+    this.countryInput = page.locator('#react-select-country-select-input');
+    this.countryListbox = page.locator('#react-select-country-select-listbox');
+
     this.continueBtn = page.getByRole('button', {name: 'Continue'});
 
     // OTP
@@ -44,8 +51,28 @@ export class SignupPage {
     await this.submit();
   }
 
-  async setupOrganisation(companyName) {
+  async selectCountry(countryName = 'India') {
+    const isUnfilled = await this.countryPlaceholder.isVisible().catch(() => false);
+
+    if (!isUnfilled) {
+      console.log('Country already pre-filled, skipping manual selection');
+      return;
+    }
+
+    await this.countryInput.click();
+    await this.countryInput.fill(countryName);
+
+    const option = this.countryListbox.getByRole('option', {name: countryName, exact: true});
+    await expect(option).toBeVisible({timeout: 10000});
+    await option.click();
+
+    console.log(`Country manually selected: ${countryName}`);
+  }
+
+  async setupOrganisation(companyName, country = 'India') {
     await this.page.getByText('Pre-filled from your location').waitFor({state: 'visible', timeout: 15000}).catch(() => {});
+
+    await this.selectCountry(country);
 
     await expect(async () => {
       await this.companyNameInput.click();
