@@ -26,6 +26,14 @@ const specs = [
     file: 'tests/SMOKE_TC_007.spec.js'
   },
   {
+    name: 'Project Creation - Org Admin',
+    file: 'tests/SMOKE_TC_008.spec.js'
+  },
+  {
+    name: 'Project Creation - Org Admin',
+    file: 'tests/SMOKE_TC_009.spec.js'
+  },
+  {
     name: 'Logout',
     file: 'tests/SMOKE_TC_003.spec.js'
   }

@@ -11,7 +11,7 @@ test('Verify user can successfully login using valid credentials', async ({ page
   await loginPage.login(loginUsers.email, loginUsers.password);
 
  await expect(page).toHaveURL(/dashboard/);
-  console.log(`✅ Login successful for: ${loginUsers.email}`);
-  console.log(`🔑 Password used: ${loginUsers.password}`);
+  console.log(`Login successful for: ${loginUsers.email}`);
+  console.log(`Password used: ${loginUsers.password}`);
 
 });
