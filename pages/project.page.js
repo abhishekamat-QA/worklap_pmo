@@ -90,6 +90,32 @@ export class ProjectPage {
 
 
         // ==========================================
+        // PROJECT OWNER
+        // ==========================================
+
+        this.projectOwnerSection = page
+            .locator('label')
+            .filter({
+                hasText: 'Project Owner'
+            })
+            .locator('..');
+
+        this.projectOwnerSearchInput =
+            this.projectOwnerSection.getByPlaceholder(
+                'Search project owner...'
+            );
+
+        this.projectOwnerSelectButton =
+            this.projectOwnerSection.getByRole(
+                'button',
+                {
+                    name: 'Select',
+                    exact: true
+                }
+            );
+
+
+        // ==========================================
         // EDIT PROJECT
         // ==========================================
 
@@ -442,81 +468,216 @@ export class ProjectPage {
             `Project created: ${name}`
         );
     }
-//==========================================
-// OPEN PROJECTS
-//==========================================
+
+
+    // ==========================================
+    // OPEN PROJECTS
+    // ==========================================
 
     async openProjects() {
 
-    // ==========================================
-    // Step 1: Navigate back to PMO
-    // ==========================================
-
-    await expect(
-        this.worklapLogo
-    ).toBeVisible({
-        timeout: 15000
-    });
-
-    await this.worklapLogo.click();
-
-
-    // ==========================================
-    // Step 2: Wait for PMO page
-    // ==========================================
-
-    await expect(
-        this.page
-    ).toHaveURL(
-        /\/pmo\//,
-        {
-            timeout: 15000
-        }
-    );
-
-
-    // ==========================================
-    // Step 3: Expand Projects only if collapsed
-    // ==========================================
-
-    if (!(await this.viewAllProjects.isVisible())) {
+        // ==========================================
+        // Step 1: Navigate back to PMO
+        // ==========================================
 
         await expect(
-            this.projectsNavigation
+            this.worklapLogo
         ).toBeVisible({
             timeout: 15000
         });
 
-        // Expand Projects section
-        await this.projectsNavigation.click();
+        await this.worklapLogo.click();
+
+
+        // ==========================================
+        // Step 2: Wait for PMO page
+        // ==========================================
+
+        await expect(
+            this.page
+        ).toHaveURL(
+            /\/pmo\//,
+            {
+                timeout: 15000
+            }
+        );
+
+
+        // ==========================================
+        // Step 3: Expand Projects only if collapsed
+        // ==========================================
+
+        if (!(await this.viewAllProjects.isVisible())) {
+
+            await expect(
+                this.projectsNavigation
+            ).toBeVisible({
+                timeout: 15000
+            });
+
+            // Expand Projects section
+            await this.projectsNavigation.click();
+        }
+
+
+        // ==========================================
+        // Step 4: Wait for View All Projects
+        // ==========================================
+
+        await expect(
+            this.viewAllProjects
+        ).toBeVisible({
+            timeout: 15000
+        });
+
+
+        // ==========================================
+        // Step 5: Open All Projects
+        // ==========================================
+
+        await this.viewAllProjects.click();
+
+        console.log(
+            'Opened View All Projects'
+        );
     }
 
 
     // ==========================================
-    // Step 4: Wait for View All Projects
+    // GET TOP PROJECT
     // ==========================================
 
-    await expect(
-        this.viewAllProjects
-    ).toBeVisible({
-        timeout: 15000
-    });
+    async getTopProjectName() {
+
+        const topProjectRow =
+            this.page
+                .locator('table tbody tr')
+                .first();
+
+        await expect(
+            topProjectRow
+        ).toBeVisible({
+            timeout: 15000
+        });
+
+        const projectName =
+            (
+                await topProjectRow
+                    .locator('td')
+                    .first()
+                    .locator(
+                        'div.font-semibold.text-neutral'
+                    )
+                    .innerText()
+            ).trim();
+
+        if (!projectName) {
+            throw new Error(
+                'Unable to get the top project name.'
+            );
+        }
+
+        console.log(
+            `Top Project: ${projectName}`
+        );
+
+        return projectName;
+    }
 
 
     // ==========================================
-    // Step 5: Open All Projects
+    // SELECT PROJECT OWNER
+    // ==========================================
+    //
+    // Search Project Owner.
+    //
+    // If button says "Select" → click it.
+    // If already selected → do not click.
+    //
+    // This locator is scoped only to the
+    // Project Owner section so it will NOT
+    // click Team Member Select buttons.
     // ==========================================
 
-    await this.viewAllProjects.click();
+    async selectProjectOwner(searchText) {
 
-    console.log(
-        'Opened View All Projects'
-    );
-}
+        await expect(
+            this.projectOwnerSearchInput
+        ).toBeVisible({
+            timeout: 15000
+        });
+
+        // Enter Project Owner name
+        await this.projectOwnerSearchInput.fill(
+            searchText
+        );
+
+        console.log(
+            `Project Owner searched: ${searchText}`
+        );
+
+
+        // Get Project Owner Select button
+        const selectButton =
+            this.projectOwnerSelectButton.first();
+
+        const buttonCount =
+            await selectButton.count();
+
+
+        // ==========================================
+        // OWNER ALREADY SELECTED
+        // ==========================================
+
+        if (buttonCount === 0) {
+
+            console.log(
+                `${searchText} is already selected.`
+            );
+
+            return;
+        }
+
+
+        // ==========================================
+        // CHECK BUTTON TEXT
+        // ==========================================
+
+        const buttonText =
+            (
+                await selectButton.innerText()
+            ).trim();
+
+
+        // ==========================================
+        // SELECT OWNER IF NOT SELECTED
+        // ==========================================
+
+        if (buttonText === 'Select') {
+
+            await expect(
+                selectButton
+            ).toBeVisible({
+                timeout: 10000
+            });
+
+            await selectButton.click();
+
+            console.log(
+                `Selected Project Owner: ${searchText}`
+            );
+
+        } else {
+
+            console.log(
+                `${searchText} is already selected.`
+            );
+        }
+    }
 
 
     // ==========================================
-    // EDIT PROJECT
+    // EDIT PROJECT - PM ADMIN
     // ==========================================
 
     async editProject(currentProjectName) {
@@ -605,6 +766,124 @@ export class ProjectPage {
 
         console.log(
             `Updated Project Type: ${selectedProjectType}`
+        );
+
+
+        // Return updated values for test verification
+        return {
+            updatedProjectName,
+            updatedDescription,
+            projectType: selectedProjectType
+        };
+    }
+
+
+    // ==========================================
+    // EDIT PROJECT - PM MANAGER
+    // ==========================================
+
+    async editProjectAsManager(currentProjectName) {
+
+        // ==========================================
+        // OPEN PROJECT MENU
+        // ==========================================
+
+        const projectMenu =
+            this.projectMenuButton(
+                currentProjectName
+            );
+
+        await expect(
+            projectMenu
+        ).toBeVisible({
+            timeout: 15000
+        });
+
+        await projectMenu.click();
+
+
+        // ==========================================
+        // OPEN EDIT PROJECT
+        // ==========================================
+
+        await expect(
+            this.editButton
+        ).toBeVisible({
+            timeout: 10000
+        });
+
+        await this.editButton.click();
+
+
+        // ==========================================
+        // UPDATE PROJECT NAME
+        // Remove last 3 characters
+        // Add "mng"
+        // ==========================================
+
+        const updatedProjectName =
+            currentProjectName.slice(0, -3) + 'mng';
+
+        await this.projectNameInput.fill(
+            updatedProjectName
+        );
+
+        console.log(
+            `Updated Project Name: ${updatedProjectName}`
+        );
+
+
+        // ==========================================
+        // UPDATE DESCRIPTION
+        // ==========================================
+
+        const updatedDescription =
+            this.generateProjectDescription();
+
+        await this.projectDescriptionInput.fill(
+            updatedDescription
+        );
+
+        console.log(
+            `Updated Description Length: ${updatedDescription.length}`
+        );
+
+
+        // ==========================================
+        // UPDATE PROJECT TYPE
+        // ==========================================
+
+        const selectedProjectType =
+            await this.selectProjectType();
+
+        console.log(
+            `Updated Project Type: ${selectedProjectType}`
+        );
+
+
+        // ==========================================
+        // PROJECT OWNER
+        // ==========================================
+
+        await this.selectProjectOwner(
+            'PM Manager'
+        );
+
+
+        // ==========================================
+        // UPDATE PROJECT
+        // ==========================================
+
+        await expect(
+            this.updateButton
+        ).toBeEnabled({
+            timeout: 15000
+        });
+
+        await this.updateButton.click();
+
+        console.log(
+            'Project updated successfully by PM Manager'
         );
 
 
