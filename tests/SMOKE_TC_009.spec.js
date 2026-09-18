@@ -20,15 +20,9 @@ test(
         // GET PM MANAGER USER
         // ==========================================
 
-        const pmManager = invitedUsers.find(
-            user => user.role === 'PM Manager'
-        );
+        const pmManager = invitedUsers.find(user => user.role === 'PM Manager');
 
-        if (!pmManager) {
-            throw new Error(
-                'PM Manager user not found in invitedUsers.json'
-            );
-        }
+        if (!pmManager) {throw new Error('PM Manager user not found in invitedUsers.json');}
 
 
         // ==========================================
@@ -36,46 +30,27 @@ test(
         // ==========================================
 
         await loginPage.goto();
-
-        await loginPage.login(
-            pmManager.email,
-            pmManager.password
-        );
-
+        await loginPage.login(pmManager.email,pmManager.password);
 
         // ==========================================
         // VERIFY DASHBOARD
         // ==========================================
 
-        await expect(
-            page
-        ).toHaveURL(
-            /projects/,
-            {
-                timeout: 15000
-            }
-        );
-
+        await expect(page).toHaveURL(/projects/,{timeout: 15000});
 
         // ==========================================
         // OPEN PROFILE
         // ==========================================
 
         await profilePage.openProfileDropdown();
-
         await profilePage.openProfile();
-
 
         // ==========================================
         // VERIFY PROFILE
         // ==========================================
 
         await profilePage.verifyProfilePage();
-
-        await profilePage.verifyOrganizationRole(
-            pmManager.role
-        );
-
+        await profilePage.verifyOrganizationRole(pmManager.role);
 
         // ==========================================
         // OPEN VIEW ALL PROJECTS
@@ -83,18 +58,12 @@ test(
 
         await projectPage.openProjects();
 
-
         // ==========================================
         // GET TOP / LATEST PROJECT
         // ==========================================
 
-        const currentProjectName =
-            await projectPage.getTopProjectName();
-
-        console.log(
-            `Latest Project: ${currentProjectName}`
-        );
-
+        const currentProjectName =await projectPage.getTopProjectName();
+        console.log(`Latest Project: ${currentProjectName}`);
 
         // ==========================================
         // GENERATE EXPECTED UPDATED PROJECT NAME
@@ -102,23 +71,14 @@ test(
         // Add "mng"
         // ==========================================
 
-        const expectedUpdatedProjectName =
-            currentProjectName.slice(0, -3) + 'mng';
-
-        console.log(
-            `Expected Updated Project: ${expectedUpdatedProjectName}`
-        );
-
+        const expectedUpdatedProjectName =currentProjectName.slice(0, -3) + 'mng';
+        console.log(`Expected Updated Project: ${expectedUpdatedProjectName}`);
 
         // ==========================================
         // EDIT LATEST PROJECT AS PM MANAGER
         // ==========================================
 
-        const editResult =
-            await projectPage.editProjectAsManager(
-                currentProjectName
-            );
-
+        const editResult =await projectPage.editProjectAsManager(currentProjectName);
 
       // ==========================================
 // NAVIGATE TO VIEW ALL PROJECTS AGAIN
@@ -126,34 +86,18 @@ test(
 
 await projectPage.openProjects();
 
-
 // ==========================================
 // VERIFY UPDATED PROJECT IS DISPLAYED
 // ==========================================
 
-const updatedProject =
-    page.locator(
-        'table tbody tr div.font-semibold.text-neutral'
-    ).filter({
-        hasText: expectedUpdatedProjectName
-    });
-
-await expect(
-    updatedProject
-).toBeVisible({
-    timeout: 15000
-});
-
+const updatedProject =page.locator('table tbody tr div.font-semibold.text-neutral').filter({hasText: expectedUpdatedProjectName});
+await expect(updatedProject).toBeVisible({timeout: 15000});
 
 // ==========================================
 // VERIFY UPDATED PROJECT NAME
 // ==========================================
 
-expect(
-    editResult.updatedProjectName
-).toBe(
-    expectedUpdatedProjectName
-);
+expect(editResult.updatedProjectName).toBe(expectedUpdatedProjectName);
 
         // ==========================================
         // FINAL LOG
