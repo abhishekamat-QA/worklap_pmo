@@ -34,8 +34,8 @@ const specs = [
     file: 'tests/SMOKE_TC_009.spec.js'
   },
   {
-    name: 'Project Access - Pm User',
-    file: 'tests/SMOKE_TC_009.spec.js'
+    name: 'Project Access - PM User',
+    file: 'tests/SMOKE_TC_010.spec.js'
   },
   {
     name: 'Logout',
